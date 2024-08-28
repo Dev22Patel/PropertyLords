@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "508354716022",
+    "project_id": "flutter-firebase-3c0d2",
+    "storage_bucket": "flutter-firebase-3c0d2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:508354716022:android:dedad05a6f9cb04bc89a57",
+        "android_client_info": {
+          "package_name": "com.example.realestate"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDmZjJ2SDQatkr3vy0kcmy9CtdrHY8-lE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
