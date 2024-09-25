@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'dart:typed_data';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../services/firestore_service.dart';
+import 'PropertyDetailsScreen.dart';
+import 'AddPropertyScreen.dart';
+import 'ProfileScreen.dart';
 class PropertiesListScreen extends StatefulWidget {
+  const PropertiesListScreen({super.key});
+
   @override
   _PropertiesListScreenState createState() => _PropertiesListScreenState();
 }
@@ -25,423 +30,229 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
     });
   }
 
-  Future<void> _addProperty() async {
-    final formKey = GlobalKey<FormState>();
-    String? name, address, type, wifi, bathrooms;
-    int? price;
-    Uint8List? image;
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add Property'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: InputDecoration(hintText: 'Name'),
-                  onSaved: (value) => name = value,
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter a name' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(hintText: 'Address'),
-                  onSaved: (value) => address = value,
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter an address' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(hintText: 'Type (house, villa, flat, etc.)'),
-                  onSaved: (value) => type = value,
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter a property type' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(hintText: 'Wifi'),
-                  onSaved: (value) => wifi = value,
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter wifi details' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(hintText: 'Bathrooms'),
-                  onSaved: (value) => bathrooms = value,
-                  validator: (value) => value?.isEmpty ?? true ? 'Please enter bathroom details' : null,
-                ),
-                TextFormField(
-                  decoration: InputDecoration(hintText: 'Price'),
-                  keyboardType: TextInputType.number,
-                  onSaved: (value) => price = int.tryParse(value ?? ''),
-                  validator: (value) => (value?.isEmpty ?? true) || int.tryParse(value ?? '') == null
-                      ? 'Please enter a valid price'
-                      : null,
-                ),
-                SizedBox(height: 16.0),
-                ElevatedButton(
-                  onPressed: () async {
-                    final pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
-                    if (pickedImage != null) {
-                      image = await pickedImage.readAsBytes();
-                    }
-                  },
-                  child: Text('Select Property Image'),
-                ),
-              ],
-            ),
-          ),
+  void _showAddPropertyScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddPropertyScreen(
+          onPropertyAdded: () => setState(() {}),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() ?? false) {
-                formKey.currentState?.save();
-                _saveProperty(name!, address!, type!, wifi!, bathrooms!, price!, image!);
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text('Save'),
-          ),
-        ],
       ),
     );
   }
 
-  Future<void> _saveProperty(
-    String name,
-    String address,
-    String type,
-    String wifi,
-    String bathrooms,
-    int price,
-    Uint8List image,
-  ) async {
-    try {
-      await FirebaseFirestore.instance.collection('properties').add({
-        'name': name,
-        'address': address,
-        'type': type,
-        'wifi': wifi,
-        'bathrooms': bathrooms,
-        'price': price,
-        'image': image,
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Property added successfully!'),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error adding property: $e'),
-        ),
-      );
-    }
+  void _showProfileScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(user: _currentUser!),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: Text(
+          'PropertyLords',
+          style: GoogleFonts.poppins(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person, color: Colors.white),
+            onPressed: _showProfileScreen,
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () {
+              FirebaseAuth.instance.signOut();
+              Navigator.pushNamed(context, '/login');
+            },
+          ),
+        ],
+        backgroundColor: const Color(0xFF1E3A8A), // Dark blue
+        elevation: 0,
+      ),
+      body: Container(
+        color: const Color(0xFFF3F4F6), // Light gray background
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('PropertyLords'),
-            Spacer(),
-            IconButton(
-              icon: Icon(Icons.logout),
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.pushNamed(context, '/login');
-              },
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Property Types',
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF1E3A8A),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildChoiceChip('All', _selectedType == null),
+                    const SizedBox(width: 8.0),
+                    _buildChoiceChip('House', _selectedType == 'house'),
+                    const SizedBox(width: 8.0),
+                    _buildChoiceChip('Villa', _selectedType == 'villa'),
+                    const SizedBox(width: 8.0),
+                    _buildChoiceChip('Flat', _selectedType == 'flat'),
+                    const SizedBox(width: 8.0),
+                    _buildChoiceChip('Farmhouse', _selectedType == 'farmhouse'),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: _currentUser != null
+                  ? StreamBuilder<QuerySnapshot>(
+                      stream: _selectedType == null
+                          ? FirestoreService().getAllProperties()
+                          : FirestoreService().getPropertiesByType(_selectedType!),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Error: ${snapshot.error}'));
+                        }
+
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+
+                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No properties found',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                color: const Color(0xFF6B7280),
+                              ),
+                            ),
+                          );
+                        }
+
+                        return GridView.builder(
+                          padding: const EdgeInsets.all(16.0),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16.0,
+                            mainAxisSpacing: 16.0,
+                            childAspectRatio: 0.75,
+                          ),
+                          itemCount: snapshot.data!.docs.length,
+                          itemBuilder: (context, index) {
+                            var property = snapshot.data!.docs[index];
+                            return _buildPropertyCard(property);
+                          },
+                        );
+                      },
+                    )
+                  : const Center(child: CircularProgressIndicator()),
             ),
           ],
         ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Property Types',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Wrap(
-              spacing: 8.0,
-              children: [
-                ChoiceChip(
-                  label: Text('All'),
-                  selected: _selectedType == null,
-                  onSelected: (_) => setState(() => _selectedType = null),
-                ),
-                ChoiceChip(
-                  label: Text('House'),
-                  selected: _selectedType == 'house',
-                  onSelected: (_) => setState(() => _selectedType = 'house'),
-                ),
-                ChoiceChip(
-                  label: Text('Villa'),
-                  selected: _selectedType == 'villa',
-                  onSelected: (_) => setState(() => _selectedType = 'villa'),
-                ),
-                ChoiceChip(
-                  label: Text('Flat'),
-                  selected: _selectedType == 'flat',
-                  onSelected: (_) => setState(() => _selectedType = 'flat'),
-                ),
-                ChoiceChip(
-                  label: Text('Farmhouse'),
-                  selected: _selectedType == 'farmhouse',
-                  onSelected: (_) => setState(() => _selectedType = 'farmhouse'),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: _currentUser != null
-                ? StreamBuilder<QuerySnapshot>(
-                    stream: _selectedType == null
-                        ? FirebaseFirestore.instance.collection('properties').snapshots()
-                        : FirebaseFirestore.instance
-                            .collection('properties')
-                            .where('type', isEqualTo: _selectedType)
-                            .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(child: Text('No properties found'));
-                      }
-
-                      return GridView.builder(
-                        padding: EdgeInsets.all(16.0),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 16.0,
-                        ),
-                        itemCount: snapshot.data!.docs.length,
-                        itemBuilder: (context, index) {
-                          var property = snapshot.data!.docs[index];
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      PropertyDetailsScreen(propertyId: property.id),
-                                ),
-                              );
-                            },
-                            child: Card(
-                              elevation: 4.0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16.0),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  ClipRoundedImage(
-                                    url: property['image'],
-                                    height: 150.0,
-                                  ),
-                                  SizedBox(height: 8.0),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                    child: Text(
-                                      property['name'] ?? 'Unnamed Property',
-                                      style: TextStyle(
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.0),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                    child: Text(
-                                      property['address'] ?? 'No address',
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        color: Colors.grey[600],
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: 8.0),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                                    child: Text(
-                                      '\$${property['price']?.toString() ?? 'N/A'}',
-                                      style: TextStyle(
-                                        fontSize: 16.0,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  )
-                : Center(child: CircularProgressIndicator()),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addProperty,
-        child: Icon(Icons.add),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showAddPropertyScreen,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text(
+          'Add Property',
+          style: GoogleFonts.poppins(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF1E3A8A),
       ),
     );
   }
-}
 
-class PropertyDetailsScreen extends StatelessWidget {
-  final String propertyId;
-
-  PropertyDetailsScreen({required this.propertyId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Property Details'),
+Widget _buildPropertyCard(DocumentSnapshot property) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PropertyDetailsScreen(propertyId: property.id),
+        ),
+      );
+    },
+    child: Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
       ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: FirebaseFirestore.instance.collection('properties').doc(propertyId).get(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('Property not found'));
-          }
-
-          var property = snapshot.data!;
-          return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12.0)),
+              child: Image.network(
+                property['image'] ?? 'https://via.placeholder.com/150',
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
             child: Padding(
-              padding: EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRoundedImage(
-                    url: property['image'],
-                    height: 300.0,
-                  ),
-                  SizedBox(height: 16.0),
                   Text(
-                    property['name'] ?? 'N/A',
-                    style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+                    property['propertyName'] ?? 'N/A',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF1E3A8A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 8.0),
+                  const SizedBox(height: 4.0),
                   Text(
-                    property['address'] ?? 'N/A',
-                    style: TextStyle(fontSize: 16.0, color: Colors.grey[600]),
-                  ),
-                  SizedBox(height: 16.0),
-                  Text(
-                    'Type: ${property['type'] ?? 'N/A'}',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text(
-                    'Wifi: ${property['wifi'] ?? 'N/A'}',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text(
-                    'Bathrooms: ${property['bathrooms'] ?? 'N/A'}',
-                    style: TextStyle(fontSize: 16.0),
-                  ),
-                  SizedBox(height: 8.0),
-                  Text(
-                    '\$${property['price']?.toString() ?? 'N/A'}',
-                    style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                    '${property['bhk'] ?? 'N/A'} BHK',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12.0,
+                      color: const Color(0xFF6B7280),
+                    ),
                   ),
                 ],
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
-class ClipRoundedImage extends StatelessWidget {
-  final String? url;
-  final double height;
-
-  ClipRoundedImage({required this.url, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRoundedNetworkImage(
-      imageUrl: url ?? '',
-      height: height,
-      fit: BoxFit.cover,
-    );
-  }
-}
-
-class ClipRoundedNetworkImage extends StatelessWidget {
-  final String imageUrl;
-  final double height;
-  final BoxFit fit;
-
-  ClipRoundedNetworkImage({
-    required this.imageUrl,
-    required this.height,
-    required this.fit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16.0),
-      child: Image.network(
-        imageUrl,
-        height: height,
-        fit: fit,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Center(
-            child: CircularProgressIndicator(
-              value: loadingProgress.expectedTotalBytes != null
-                  ? loadingProgress.cumulativeBytesLoaded /
-                      loadingProgress.expectedTotalBytes!
-                  : null,
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Center(
-            child: Icon(
-              Icons.error,
-              color: Colors.grey[400],
-              size: 48.0,
-            ),
-          );
-        },
+  Widget _buildChoiceChip(String label, bool selected) {
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: GoogleFonts.poppins(
+          color: selected ? Colors.white : const Color(0xFF1E3A8A),
+        ),
       ),
+      selected: selected,
+      selectedColor: const Color(0xFF1E3A8A),
+      backgroundColor: Colors.white,
+      onSelected: (isSelected) {
+        setState(() {
+          _selectedType = isSelected ? (label == 'All' ? null : label.toLowerCase()) : null;
+        });
+      },
     );
   }
 }

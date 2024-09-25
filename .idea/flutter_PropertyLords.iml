@@ -15,6 +15,9 @@
       <excludeFolder url="file://$MODULE_DIR$/wecube/.dart_tool" />
       <excludeFolder url="file://$MODULE_DIR$/wecube/.pub" />
       <excludeFolder url="file://$MODULE_DIR$/wecube/build" />
+      <excludeFolder url="file://$MODULE_DIR$/hardware/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/hardware/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/hardware/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

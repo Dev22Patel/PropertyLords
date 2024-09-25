@@ -3,6 +3,7 @@ import 'package:realestate/features/user_auth/presentation/widgets/form_containe
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:realestate/features/user_auth/presentation/pages/sign_up_page.dart';
 import '../../firebase_auth_implementation/firebase_auth_services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,16 +13,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-
-  bool _isSigning = false;
-
-
-
   final FirebaseAuthService _auth = FirebaseAuthService();
 
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
-
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   @override
   void dispose() {
@@ -30,12 +25,11 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Login"),
+        title: const Text("Login"),
       ),
       body: Center(
         child: Padding(
@@ -43,11 +37,11 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "Login",
                 style: TextStyle(fontSize: 27, fontWeight: FontWeight.bold),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               FormContainerWidget(
@@ -55,13 +49,13 @@ class _LoginPageState extends State<LoginPage> {
                 hintText: "Email",
                 isPasswordField: false,
               ),
-              SizedBox(height: 10,),
+              const SizedBox(height: 10,),
               FormContainerWidget(
                 controller: _passwordController,
                 hintText: "Password",
                 isPasswordField: true,
               ),
-              SizedBox(height: 30,),
+              const SizedBox(height: 30,),
               GestureDetector(
                 onTap: _signIn,
                 child: Container(
@@ -71,23 +65,22 @@ class _LoginPageState extends State<LoginPage> {
                     color: Colors.blue,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Center(child:Text("Login",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold),)),
+                  child: const Center(child: Text("Login", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),)),
                 ),
               ),
-              SizedBox(height: 20,),
-              Row(mainAxisAlignment: MainAxisAlignment.center,
+              const SizedBox(height: 20,),
+              Row(mainAxisAlignment: MainAxisAlignment.center,  // Corrected this line
                 children: [
-                  Text("Don't have an account?"),
-                  SizedBox(width: 5,),
+                  const Text("Don't have an account?"),
+                  const SizedBox(width: 5,),
                   GestureDetector(
-                      onTap: (){
-                        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => SignUpPage()), (route) => false);
-                      },
-                      child: Text("Sign Up",style: TextStyle(color: Colors.blue,fontWeight: FontWeight.bold),))
+                    onTap: () {
+                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const SignUpPage()), (route) => false);
+                    },
+                    child: const Text("Sign Up", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),),
+                  )
                 ],
               )
-
-
             ],
           ),
         ),
@@ -96,18 +89,61 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _signIn() async {
-
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
+  String email = _emailController.text;
+  String password = _passwordController.text;
+  if((email == "admin@gmail.com") && (password== "admin")){
+     Navigator.pushNamed(context, "/admin");
+  }
+  try {
     User? user = await _auth.signInWithEmailAndPassword(email, password);
 
-    if (user!= null){
-      print("User is successfully signedIn");
+    if (user != null) {
+      // Show a success toast
+      Fluttertoast.showToast(
+        msg: "Successfully logged in!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
+
       Navigator.pushNamed(context, "/home");
-    } else{
-      print("Some error happend");
+    }
+  } on FirebaseAuthException catch (e) {
+    String errorMessage = "An error occurred";
+
+    if (e.code == 'user-not-found') {
+      errorMessage = "No user found for this email.";
+    } else if (e.code == 'wrong-password') {
+      errorMessage = "Wrong password provided.";
+    } else if (e.code == 'invalid-email') {
+      errorMessage = "Invalid email provided.";
+    } else if (e.code == 'user-disabled') {
+      errorMessage = "User account has been disabled.";
+    } else {
+      errorMessage = e.message ?? errorMessage;
     }
 
+    // Show an error toast
+    Fluttertoast.showToast(
+      msg: errorMessage,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  } catch (e) {
+    // Fallback in case it's not a FirebaseAuthException
+    Fluttertoast.showToast(
+      msg: "An unexpected error occurred.",
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
   }
+}
 }

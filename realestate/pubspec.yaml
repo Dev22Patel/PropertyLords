@@ -41,7 +41,8 @@ dependencies:
   firebase_auth: ^5.2.0
   firebase_storage: ^12.2.0
   image_picker: ^1.1.2
-
+  fluttertoast: ^8.1.1  # Add this line for toast notifications
+  google_fonts: ^4.0.3
 dev_dependencies:
   flutter_test:
     sdk: flutter
