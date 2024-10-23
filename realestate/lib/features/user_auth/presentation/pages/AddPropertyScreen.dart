@@ -154,62 +154,118 @@ class _AddPropertyScreenState extends State<AddPropertyScreen> {
     );
   }
 
-    Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ElevatedButton.icon(
-          onPressed: _pickImage,
-          icon: const Icon(Icons.add_a_photo),
-          label: const Text('Add Property Image'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E3A8A),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+Widget _buildImagePicker() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        'Property Image',
+        style: GoogleFonts.poppins(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1E3A8A),
         ),
-        if (_imageFile != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+      ),
+      const SizedBox(height: 12),
+      Container(
+        height: 200,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFD1D5DB)),
+        ),
+        child: _imageFile != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(12),
               child: Image.file(
                 File(_imageFile!.path),
-                height: 200,
-                width: double.infinity,
                 fit: BoxFit.cover,
               ),
+            )
+          : Center(
+              child: Icon(
+                Icons.add_a_photo,
+                size: 64,
+                color: const Color(0xFF9CA3AF),
+              ),
             ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSubmitButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _submitProperty,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1E3A8A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'Submit Property',
+      ),
+      const SizedBox(height: 16),
+      SizedBox(
+        width: double.infinity,
+        height: 56,
+        child: ElevatedButton.icon(
+          onPressed: _pickImage,
+          icon: const Icon(Icons.add_a_photo, color: Colors.white),
+          label: Text(
+            _imageFile != null ? 'Change Image' : 'Add Property Image',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1E3A8A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
       ),
-    );
-  }
+    ],
+  );
+}
+
+  Widget _buildSubmitButton() {
+  return Container(
+    width: double.infinity,
+    height: 56,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      gradient: const LinearGradient(
+        colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6)],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF1E3A8A).withOpacity(0.3),
+          spreadRadius: 1,
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: ElevatedButton(
+      onPressed: _submitProperty,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.add_home_work, color: Colors.white),
+          const SizedBox(width: 12),
+          Text(
+            'Submit Property',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
   Future<void> _pickImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {

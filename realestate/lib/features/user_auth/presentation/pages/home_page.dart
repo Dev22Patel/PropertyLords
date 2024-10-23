@@ -6,6 +6,7 @@ import '../services/firestore_service.dart';
 import 'PropertyDetailsScreen.dart';
 import 'AddPropertyScreen.dart';
 import 'ProfileScreen.dart';
+
 class PropertiesListScreen extends StatefulWidget {
   const PropertiesListScreen({super.key});
 
@@ -75,11 +76,11 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
             },
           ),
         ],
-        backgroundColor: const Color(0xFF1E3A8A), // Dark blue
+        backgroundColor: const Color(0xFF1E3A8A),
         elevation: 0,
       ),
       body: Container(
-        color: const Color(0xFFF3F4F6), // Light gray background
+        color: const Color(0xFFF3F4F6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -117,7 +118,7 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
               child: _currentUser != null
                   ? StreamBuilder<QuerySnapshot>(
                       stream: _selectedType == null
-                          ? FirestoreService().getAllProperties()
+                          ? FirestoreService().getAllProperties(includeSuspected: false)
                           : FirestoreService().getPropertiesByType(_selectedType!),
                       builder: (context, snapshot) {
                         if (snapshot.hasError) {
@@ -140,6 +141,23 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
                           );
                         }
 
+                        // Filter out suspected properties
+                        final nonSuspectedProperties = snapshot.data!.docs
+                            .where((doc) => !(doc.data() as Map<String, dynamic>)['isSuspected'] ?? false)
+                            .toList();
+
+                        if (nonSuspectedProperties.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No properties found',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                color: const Color(0xFF6B7280),
+                              ),
+                            ),
+                          );
+                        }
+
                         return GridView.builder(
                           padding: const EdgeInsets.all(16.0),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -148,9 +166,9 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
                             mainAxisSpacing: 16.0,
                             childAspectRatio: 0.75,
                           ),
-                          itemCount: snapshot.data!.docs.length,
+                          itemCount: nonSuspectedProperties.length,
                           itemBuilder: (context, index) {
-                            var property = snapshot.data!.docs[index];
+                            var property = nonSuspectedProperties[index];
                             return _buildPropertyCard(property);
                           },
                         );
@@ -173,69 +191,77 @@ class _PropertiesListScreenState extends State<PropertiesListScreen> {
     );
   }
 
-Widget _buildPropertyCard(DocumentSnapshot property) {
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PropertyDetailsScreen(propertyId: property.id),
+  Widget _buildPropertyCard(DocumentSnapshot property) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PropertyDetailsScreen(propertyId: property.id),
+          ),
+        );
+      },
+      child: Card(
+        elevation: 4.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
         ),
-      );
-    },
-    child: Card(
-      elevation: 4.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            flex: 3,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12.0)),
-              child: Image.network(
-                property['image'] ?? 'https://via.placeholder.com/150',
-                fit: BoxFit.cover,
-                width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(12.0)),
+                child: Image.network(
+                  property['image'] ?? 'https://via.placeholder.com/150',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    property['propertyName'] ?? 'N/A',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF1E3A8A),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      property['propertyName'] ?? 'N/A',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1E3A8A),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4.0),
-                  Text(
-                    '${property['bhk'] ?? 'N/A'} BHK',
-                    style: GoogleFonts.poppins(
-                      fontSize: 12.0,
-                      color: const Color(0xFF6B7280),
+                    const SizedBox(height: 4.0),
+                    Text(
+                      '${property['bhk'] ?? 'N/A'} BHK',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.0,
+                        color: const Color(0xFF6B7280),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4.0),
+                    Text(
+                      '${property['dimensions'] ?? 'N/A'}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12.0,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildChoiceChip(String label, bool selected) {
     return ChoiceChip(
